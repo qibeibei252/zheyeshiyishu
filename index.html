@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>这也是艺术！</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div id="brandButton" class="brand-block">
+        <p class="eyebrow">正式第一版 · 以 2 号效果为准</p>
+        <h1>这也是艺术！</h1>
+      </div>
+      <div class="topbar-actions">
+        <span id="status" class="status" aria-live="polite">等待选择目标图片</span>
+        <button id="demoButton" class="button button-quiet" type="button">载入演示素材</button>
+      </div>
+    </header>
+
+    <main id="startView" class="start-view">
+      <div class="start-intro">
+        <p class="eyebrow">浏览器本地处理，不上传服务器</p>
+        <h1>这也是艺术！</h1>
+        <p>
+          目标图片提供颜色、形状来源和补洞色系；映射图片承载排列后的形状。没有映射图片时，也可以自动生成。
+        </p>
+      </div>
+
+      <div class="start-steps">
+        <div class="start-step">
+          <span>01</span>
+          <strong>选择目标图片</strong>
+          <p>提供作品颜色、目标孔洞和补洞色系。</p>
+        </div>
+        <div class="start-step">
+          <span>02</span>
+          <strong>准备映射图片</strong>
+          <p>可以上传图片，也可以在编辑页自动生成。</p>
+        </div>
+        <div class="start-step">
+          <span>03</span>
+          <strong>进入编辑画布</strong>
+          <p>所有图片选择和参数调整都集中在编辑页完成。</p>
+        </div>
+      </div>
+
+      <div class="start-footer start-footer-simple">
+        <div>
+          <strong>下一步在编辑页选择图片</strong>
+          <p>不会在开始页和编辑页重复选择。</p>
+        </div>
+        <button id="startEditingButton" class="button button-primary button-large" type="button">
+          开始制作
+        </button>
+      </div>
+    </main>
+
+    <main id="editorView" class="workspace is-hidden">
+      <section class="stage" aria-label="生成结果预览">
+        <div class="canvas-wrap">
+          <div id="canvasStage" class="canvas-stage">
+            <canvas id="previewCanvas"></canvas>
+            <canvas id="interactionCanvas" aria-label="映射图排列交互层"></canvas>
+          </div>
+        </div>
+        <div id="selectionBar" class="selection-bar is-hidden">
+          <div>
+            <strong id="selectionTitle">已选择形状</strong>
+            <span id="selectionMeta">拖动移动，角点缩放，顶部圆点旋转</span>
+          </div>
+          <div class="selection-actions">
+            <button id="copyShapeButton" class="button" type="button">复制</button>
+            <button id="moveUpButton" class="button" type="button">上移一层</button>
+            <button id="moveDownButton" class="button" type="button">下移一层</button>
+            <button id="deleteShapeButton" class="button danger-button" type="button">删除</button>
+          </div>
+        </div>
+        <div class="stage-meta">
+          <span id="canvasMeta">画布未生成</span>
+          <span id="shapeMeta">形状 0</span>
+          <span>本地处理</span>
+        </div>
+      </section>
+
+      <aside class="controls">
+        <section class="control-section">
+          <div class="section-heading">
+            <h2>素材</h2>
+            <span>目标图决定作品色系</span>
+          </div>
+          <label class="file-control">
+            <span>目标图片</span>
+            <input id="targetInput" type="file" accept="image/*" />
+          </label>
+          <label class="file-control">
+            <span>映射图片</span>
+            <input id="mappingInput" type="file" accept="image/*" />
+          </label>
+          <div class="segmented" id="mappingSourceGroup" aria-label="映射图片来源">
+            <button class="segment is-active" data-value="generated" type="button">程序生成</button>
+            <button class="segment" data-value="uploaded" type="button">上传图片</button>
+          </div>
+          <p id="sourceNote" class="control-note">使用目标图片色系生成映射图。</p>
+        </section>
+
+        <section class="control-section">
+          <div class="section-heading">
+            <h2>目标主色</h2>
+            <span id="paletteCount">0 / 8</span>
+          </div>
+          <div id="paletteStrip" class="palette-strip" aria-label="目标图片主色"></div>
+        </section>
+
+        <section class="control-section">
+          <div class="section-heading">
+            <h2>构图</h2>
+            <span id="compositionLabel">左右拼接</span>
+          </div>
+          <div class="segmented grid-two" id="compositionGroup" aria-label="构图方式">
+            <button class="segment is-active" data-value="sideBySide" type="button">左右</button>
+            <button class="segment" data-value="stacked" type="button">上下</button>
+            <button class="segment" data-value="surround" type="button">环绕</button>
+            <button class="segment" data-value="targetOnly" type="button">无映射</button>
+          </div>
+          <label class="select-control">
+            <span>目标位置</span>
+            <select id="targetPosition">
+              <option value="left">左侧</option>
+              <option value="right">右侧</option>
+              <option value="top">上方</option>
+              <option value="bottom">下方</option>
+            </select>
+          </label>
+          <label class="select-control">
+            <span>环绕比例</span>
+            <select id="surroundRatio">
+              <option value="3:4">3:4</option>
+              <option value="4:3">4:3</option>
+              <option value="16:9">16:9</option>
+              <option value="19:6">19:6</option>
+            </select>
+          </label>
+          <label class="select-control">
+            <span>映射适配</span>
+            <select id="mappingFit">
+              <option value="cover">覆盖裁切</option>
+              <option value="contain">适配留白</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="control-section">
+          <div class="section-heading">
+            <h2>映射效果</h2>
+            <span id="mappingModeLabel">渐变</span>
+          </div>
+          <canvas id="mappingPreview" class="mapping-preview" aria-label="映射效果预览"></canvas>
+          <div class="segmented" id="mappingModeGroup" aria-label="映射模式">
+            <button class="segment" data-value="solid" type="button">纯色</button>
+            <button class="segment is-active" data-value="gradient" type="button">渐变</button>
+            <button class="segment" data-value="blur" type="button">晕染</button>
+          </div>
+          <details class="experiment-block">
+            <summary>实验纹理（默认关闭）</summary>
+            <label class="checkbox-control">
+              <input id="textureEnabledInput" type="checkbox" />
+              <span>启用实验纹理</span>
+            </label>
+            <div id="textureOptions" class="texture-options" hidden>
+              <div class="segmented grid-two" id="textureTypeGroup" aria-label="纹理类型">
+                <button class="segment is-active" data-value="notebook" type="button">笔记本</button>
+                <button class="segment" data-value="xuanPaper" type="button">宣纸</button>
+              </div>
+            </div>
+          </details>
+          <label class="range-control">
+            <span>效果强度 <output id="strengthOutput">45%</output></span>
+            <input id="strengthInput" type="range" min="0" max="100" value="45" />
+          </label>
+          <label class="select-control">
+            <span>渐变方向</span>
+            <select id="gradientDirection">
+              <option value="diagonal">对角</option>
+              <option value="horizontal">横向</option>
+              <option value="vertical">纵向</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="control-section">
+          <div class="section-heading">
+            <h2>形状</h2>
+            <span id="shapeCountLabel">36 个</span>
+          </div>
+          <div class="shape-options" id="shapeTypeGroup" aria-label="形状类型">
+            <button class="shape-option" data-value="square" type="button">正方形</button>
+            <button class="shape-option" data-value="circle" type="button">圆形</button>
+            <button class="shape-option is-active" data-value="bird" type="button">飞鸟</button>
+            <button class="shape-option" data-value="puzzle" type="button">拼图</button>
+            <button class="shape-option" data-value="fiveStar" type="button">五角星</button>
+            <button class="shape-option" data-value="fourStar" type="button">四角星</button>
+            <button class="shape-option" data-value="cross" type="button">十字架</button>
+            <button class="shape-option" data-value="eightFlower" type="button">八角花</button>
+          </div>
+          <label class="range-control">
+            <span>数量 <output id="countOutput">36</output></span>
+            <input id="countInput" type="range" min="1" max="100" value="36" />
+          </label>
+          <div class="range-pair">
+            <label class="range-control">
+              <span>最小尺寸 <output id="minSizeOutput">3%</output></span>
+              <input id="minSizeInput" type="range" min="1" max="18" value="3" />
+            </label>
+            <label class="range-control">
+              <span>最大尺寸 <output id="maxSizeOutput">8%</output></span>
+              <input id="maxSizeInput" type="range" min="2" max="28" value="8" />
+            </label>
+          </div>
+          <div class="range-pair">
+            <label class="range-control">
+              <span>旋转下限 <output id="minRotationOutput">-25°</output></span>
+              <input id="minRotationInput" type="range" min="-180" max="180" value="-25" />
+            </label>
+            <label class="range-control">
+              <span>旋转上限 <output id="maxRotationOutput">25°</output></span>
+              <input id="maxRotationInput" type="range" min="-180" max="180" value="25" />
+            </label>
+          </div>
+          <label class="range-control">
+            <span>透明度 <output id="opacityOutput">92%</output></span>
+            <input id="opacityInput" type="range" min="10" max="100" value="92" />
+          </label>
+          <div class="segmented grid-two" id="samplingModeGroup" aria-label="取色方式">
+            <button class="segment is-active" data-value="local" type="button">局部取色</button>
+            <button class="segment" data-value="palette" type="button">主色取色</button>
+            <button class="segment" data-value="mixed" type="button">混合取色</button>
+            <button class="segment" data-value="trajectory" type="button">轨迹取色</button>
+            <button class="segment" data-value="manual" type="button">自主取色</button>
+          </div>
+          <div id="targetSamplingTooltip" class="trajectory-tooltip" role="tooltip">
+            在目标图片上按住拖动绘制轨迹，完成后点击“确认轨迹”。
+          </div>
+          <div id="targetTrajectoryActions" class="trajectory-actions" hidden>
+            <button id="clearTargetTrajectoryButton" class="button" type="button">清除轨迹</button>
+            <button id="confirmTargetTrajectoryButton" class="button button-primary" type="button">确认轨迹</button>
+          </div>
+        </section>
+
+        <section class="control-section">
+          <div class="section-heading">
+            <h2>目标孔洞排列</h2>
+            <span id="arrangementLabel">围绕中央</span>
+          </div>
+          <div class="segmented" id="arrangementGroup" aria-label="排列方式">
+            <button class="segment" data-value="random" type="button">随机散布</button>
+            <button class="segment" data-value="grid" type="button">网格</button>
+            <button class="segment is-active" data-value="around" type="button">围绕中央</button>
+          </div>
+          <div class="grid-inputs">
+            <label>
+              <span>列</span>
+              <input id="gridColumnsInput" type="number" min="1" max="20" value="6" />
+            </label>
+            <label>
+              <span>行</span>
+              <input id="gridRowsInput" type="number" min="1" max="20" value="6" />
+            </label>
+          </div>
+          <div class="range-pair">
+            <label class="range-control">
+              <span>安全区宽 <output id="safeWidthOutput">40%</output></span>
+              <input id="safeWidthInput" type="range" min="10" max="80" value="40" />
+            </label>
+            <label class="range-control">
+              <span>安全区高 <output id="safeHeightOutput">40%</output></span>
+              <input id="safeHeightInput" type="range" min="10" max="80" value="40" />
+            </label>
+          </div>
+        </section>
+
+        <section class="control-section">
+          <div class="section-heading">
+            <h2>映射形状排列</h2>
+            <span id="mappingArrangementLabel">一一对应</span>
+          </div>
+          <div class="segmented grid-two" id="mappingArrangementGroup" aria-label="映射形状排列方式">
+            <button class="segment is-active" data-value="correspond" type="button">一一对应</button>
+            <button class="segment" data-value="central" type="button">中央整齐</button>
+            <button class="segment" data-value="trajectory" type="button">轨迹排列</button>
+            <button class="segment" data-value="manual" type="button">手动排列</button>
+          </div>
+          <label class="range-control">
+            <span>排列密度 <output id="mappingDensityOutput">65%</output></span>
+            <input id="mappingDensityInput" type="range" min="0" max="100" value="65" disabled />
+          </label>
+          <div id="trajectoryTooltip" class="trajectory-tooltip" role="tooltip">
+            在映射图上按住拖动绘制一段或多段轨迹，完成后点击“确认轨迹”。
+          </div>
+          <div id="trajectoryActions" class="trajectory-actions" hidden>
+            <button id="clearTrajectoryButton" class="button" type="button">清除轨迹</button>
+            <button id="confirmTrajectoryButton" class="button button-primary" type="button">确认轨迹</button>
+          </div>
+        </section>
+
+        <section class="control-section actions-section">
+          <div class="export-format-row">
+            <span>导出格式</span>
+            <div class="segmented grid-two" id="exportFormatGroup" aria-label="导出格式">
+              <button class="segment is-active" data-value="png" type="button">PNG</button>
+              <button class="segment" data-value="jpg" type="button">JPG</button>
+            </div>
+          </div>
+          <div class="action-buttons">
+            <button id="regenerateButton" class="button button-primary" type="button">重新生成</button>
+            <button id="exportButton" class="button" type="button">导出图片</button>
+          </div>
+        </section>
+      </aside>
+
+      <div class="mobile-actions">
+        <button id="mobileRegenerateButton" class="button" type="button">重新生成</button>
+        <button id="mobileExportButton" class="button button-primary" type="button">导出</button>
+      </div>
+    </main>
+
+    <script src="prototype/js/util.js"></script>
+    <script src="prototype/js/palette.js"></script>
+    <script src="prototype/js/shapes.js"></script>
+    <script src="prototype/js/mapping.js"></script>
+    <script src="prototype/js/composition.js"></script>
+    <script src="prototype/js/renderer.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
